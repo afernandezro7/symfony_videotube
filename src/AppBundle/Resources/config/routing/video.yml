@@ -1,14 +1,5 @@
-user_new:
+video_new:
     path:   /new
-    defaults: { _controller: "AppBundle:User:new"}
+    defaults: { _controller: "AppBundle:Video:new"}
     methods: POST
 
-user_edit:
-    path:   /edit
-    defaults: { _controller: "AppBundle:User:edit"}
-    methods: POST
-
-user_upload_avatar:
-    path:   /upload-avatar
-    defaults: { _controller: "AppBundle:User:uploadAvatar"}
-    methods: POST
