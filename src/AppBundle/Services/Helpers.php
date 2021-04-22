@@ -44,8 +44,13 @@ class Helpers {
         $userIdentity = $this->authCheck($token,true)->sub;
         $user_repo= $this->em->getRepository('BackendBundle:User');
         $user= $user_repo->findOneBy(array('id'=>$userIdentity));
+
+        if(is_object($user)){
+            return $user;
+        }{
+            return null;
+        }
         
-        return $user;
     }
 
     public function removeFile($filename, $folder="")
