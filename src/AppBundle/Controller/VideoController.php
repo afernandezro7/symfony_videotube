@@ -67,9 +67,9 @@ class VideoController extends Controller
 
     }
 
-    public function editAction(Request $request)
+    public function editAction(Request $request, $video_id)
     {
-        
+
         $helpers = $this->get("app.helpers");
         $token = $request->headers->get('x-token',null);
         $validateToken = $helpers->authCheck($token);
@@ -80,10 +80,17 @@ class VideoController extends Controller
             'msg'=>'Video not created'    
         );
         
+        if(!$video_id){
+            $data['msg']='Video not found';
+            $data['code']=404;
+            return $helpers->toJson($data)->setStatusCode($data['code']);
+        }
+        
         if(!$validateToken){
             $data['msg']='Invalid Authorization';
             return $helpers->toJson($data)->setStatusCode($data['code']);
         }
+        
         
         
         $json= json_decode($request->getContent(),true);
@@ -93,7 +100,6 @@ class VideoController extends Controller
             $user= $helpers->currentUser($token);
             
             
-            $id=isset($json['id']) ? $json['id'] : null;
             $updatedAt = new \DateTime('now');
             $title=isset($json['title']) ? $json['title'] : null;
             $description= isset($json['description']) ? $json['description'] : null;
@@ -102,7 +108,7 @@ class VideoController extends Controller
             //Buscar id del usuario activo en db
             $em = $this->getDoctrine()->getManager();
             $video_repo= $em->getRepository('BackendBundle:Video');
-            $video= $video_repo->findOneBy(array('id'=>$id));
+            $video= $video_repo->findOneBy(array('id'=>$video_id));
             
             if(is_object($video)){
                 
@@ -147,5 +153,126 @@ class VideoController extends Controller
 
     }
 
+    public function uploadAction(Request $request, $video_id)
+    {
+        $helpers = $this->get("app.helpers");
+        $token = $request->headers->get('x-token',null);
+        $validateToken = $helpers->authCheck($token);
+        
+        $data = array(
+            'status'=> 'error',
+            'code'=> 400,   
+            'msg'=>'file not uploded'    
+        );
+        
+        if(!$video_id){
+            $data['msg']='Video not found';
+            $data['code']=404;
+            return $helpers->toJson($data)->setStatusCode($data['code']);
+        }
+        
+        if(!$validateToken){
+            $data['msg']='Invalid Authorization';
+            return $helpers->toJson($data)->setStatusCode($data['code']);
+        }
+
+        //Buscar id del usuario activo en db
+        $user= $helpers->currentUser($token);
+        $em = $this->getDoctrine()->getManager();
+        $video_repo= $em->getRepository('BackendBundle:Video');
+        $video= $video_repo->findOneBy(array('id'=>$video_id));
+
+        if(is_object($video)){
+                
+            if($user == null || $user->getId() != $video->getUser()->getId()){
+                $data['msg']='Invalid Authorization, this asset is not yours';
+                return $helpers->toJson($data)->setStatusCode($data['code']);
+            }
+
+            //upload video
+            $file = $request->files->get("video");
+            $videofile = false;
+
+            if(!empty($file) && $file != null){
+
+                $ext = $file->guessExtension();
+                if($ext == 'mp4' || $ext == 'mpg' || $ext == 'mpeg' || $ext == 'mkv' || $ext == 'avi'){
+                   
+                    $file_name = $user->getId()."-".time() . ".". $ext;
+                    $videofile = true;
+                    $videoName = $file_name;
+                    $file->move('uploads/videos', $file_name);
+
+                    //Delete old image
+                    $helpers->removeFile($video->getVideoPath(),'uploads/videos');
+    
+                    $video->setVideoPath($file_name);
+
+                    //Update User in db
+                    $em->persist($video);
+                    $em->flush();
+    
+                    $data = array(
+                        'status'=> 'success',
+                        'code'=> 200,   
+                        'msg'=>'Video uploaded',
+                        'video'=> $file_name    
+                    );
+    
+
+                }else {
+                    $data['msg']='Video format not supported';
+                    return $helpers->toJson($data)->setStatusCode($data['code']);
+                }
+            }
+
+            //upload image
+            $file = $request->files->get("image");
+
+            if(!empty($file) && $file != null){
+                $ext = $file->guessExtension();
+                if($ext == 'jpg' || $ext == 'jpeg' || $ext == 'png' || $ext == 'gif'){
+                   
+                    $file_name = $user->getId()."-".time() . ".". $ext;
+                    $file->move('uploads/images', $file_name);
+
+                    //Delete old image
+                    $helpers->removeFile($video->getImage(),'uploads/images');
+    
+                    $video->setImage($file_name);
+
+                    //Update User in db
+                    $em->persist($video);
+                    $em->flush();
+    
+                    $data = array(
+                        'status'=> 'success',
+                        'code'=> 200,   
+                        'msg'=>'Image uploaded',
+                        'image'=> $file_name    
+                    );
+
+                    if($videofile){
+                        $data = array(
+                            'status'=> 'success',
+                            'code'=> 200,   
+                            'msg'=>'Video and Image uploaded',
+                            'video'=> $videoName,    
+                            'image'=> $file_name,    
+                        );
+                    }
+    
+
+                }else {
+                    $data['msg']='Image format not supported';
+                    return $helpers->toJson($data)->setStatusCode($data['code']);
+                }
+            }
+        }
+
+        return $helpers->toJson($data)->setStatusCode($data['code']);
+    }
+
+    
 
 }

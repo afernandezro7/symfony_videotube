@@ -4,7 +4,11 @@ video_new:
     methods: POST
 
 video_edit:
-    path:   /edit
-    defaults: { _controller: "AppBundle:Video:edit"}
+    path:   /edit/{video_id}
+    defaults: { _controller: "AppBundle:Video:edit", video_id: null}
     methods: POST
 
+video_upload:
+    path:   /upload/{video_id}
+    defaults: { _controller: "AppBundle:Video:upload", video_id: null}
+    methods: POST

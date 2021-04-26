@@ -55,12 +55,14 @@ class Helpers {
 
     public function removeFile($filename, $folder="")
     {
-        $fs = new Filesystem();
-        $uploadRootDir = $this->rootDir;
-        $file_path = $uploadRootDir . '/../web/' . $folder.'/'.$filename;
+        if($filename){
 
-        // if(file_exists($file_path)) unlink($file_path);
-        if ($fs->exists($file_path)){ $fs->remove($file_path);}
-
+            $fs = new Filesystem();
+            $uploadRootDir = $this->rootDir;
+            $file_path = $uploadRootDir . '/../web/' . $folder.'/'.$filename;
+    
+            // if(file_exists($file_path)) unlink($file_path);
+            if ($fs->exists($file_path)){ $fs->remove($file_path);}
+        }
     }
 }
