@@ -12,3 +12,24 @@ video_upload:
     path:   /upload/{video_id}
     defaults: { _controller: "AppBundle:Video:upload", video_id: null}
     methods: POST
+
+video_list:
+    path:   /list
+    defaults: { _controller: "AppBundle:Video:list"}
+    methods: GET
+
+video_last:
+    path:   /last
+    defaults: { _controller: "AppBundle:Video:lastItems"}
+    methods: GET
+
+video_detail:
+    path:   /details/{video_id}
+    defaults: { _controller: "AppBundle:Video:videoDetails", video_id: null }
+    methods: GET
+
+video_search:
+    path:   /search/{search}
+    defaults: { _controller: "AppBundle:Video:search", search: null }
+    methods: GET
+

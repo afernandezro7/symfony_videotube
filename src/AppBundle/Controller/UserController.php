@@ -217,4 +217,34 @@ class UserController extends Controller
         return $helpers->toJson($data)->setStatusCode($data['code']);
     }
     
+    public function channelAction(Request $request, $user_id)
+    {
+        $helpers = $this->get("app.helpers");
+
+        $em = $this->getDoctrine()->getManager();
+
+        $dql = "SELECT v FROM BackendBundle:Video v ORDER BY v.id DESC";
+        $query = $em->createQuery($dql);
+
+        $page = $request->query->getInt("page",1);
+        $paginator = $this->get('knp_paginator');
+        $items_per_page = 6;
+
+        $pagination = $paginator->paginate($query, $page, $items_per_page);
+        $total_items_count = $pagination->getTotalItemCount();
+
+
+        return $helpers->toJson(array(
+            'status'=> 'success',
+            'code'=> 200,   
+            'msg'=>'Video List',
+            'page'=> $page,
+            'Total Items'=> $total_items_count,
+            'Items per Page'=> $items_per_page,
+            'Items'=> count($pagination),
+            "total pages"=> ceil($total_items_count/$items_per_page),
+            'videos'=> $pagination  
+        ))->setStatusCode(200);
+
+    }
 }
