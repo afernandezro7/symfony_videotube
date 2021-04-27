@@ -222,8 +222,21 @@ class UserController extends Controller
         $helpers = $this->get("app.helpers");
 
         $em = $this->getDoctrine()->getManager();
+        $user = $em->getRepository('BackendBundle:User')->findOneBy(array('id'=> $user_id));
 
-        $dql = "SELECT v FROM BackendBundle:Video v ORDER BY v.id DESC";
+        $data = array(
+            'status'=> 'error',
+            'code'=> 400,   
+            'msg'=>'file not uploded'    
+        );
+
+        if (!is_object($user)) {
+            $data['msg']='Channel not found';
+            $data['code']=404;
+            return $helpers->toJson($data)->setStatusCode($data['code']);
+        }
+
+        $dql = "SELECT v FROM BackendBundle:Video v WHERE v.user='$user_id' ORDER BY v.id DESC";
         $query = $em->createQuery($dql);
 
         $page = $request->query->getInt("page",1);
@@ -233,18 +246,28 @@ class UserController extends Controller
         $pagination = $paginator->paginate($query, $page, $items_per_page);
         $total_items_count = $pagination->getTotalItemCount();
 
+        $user_info = array(
+            'name' => $user->getName(),
+            'surname' => $user->getSurName(),
+            'email' => $user->getEmail(),
+            'image' => $user->getImage(),
+        );
 
-        return $helpers->toJson(array(
+        $data = array(
             'status'=> 'success',
             'code'=> 200,   
             'msg'=>'Video List',
             'page'=> $page,
-            'Total Items'=> $total_items_count,
-            'Items per Page'=> $items_per_page,
+            'Total_Items'=> $total_items_count,
+            'Items_per_Page'=> $items_per_page,
             'Items'=> count($pagination),
-            "total pages"=> ceil($total_items_count/$items_per_page),
-            'videos'=> $pagination  
-        ))->setStatusCode(200);
+            "total_pages"=> ceil($total_items_count/$items_per_page),
+            "user_info"=> $user_info,
+            'data'=> $pagination  
+        );
+
+
+        return $helpers->toJson($data)->setStatusCode($data['code']);
 
     }
 }

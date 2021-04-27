@@ -13,7 +13,7 @@ user_upload_avatar:
     defaults: { _controller: "AppBundle:User:uploadAvatar"}
     methods: POST
 
-video_channel:
+user_channel:
     path:   /channel/{user_id}
     defaults: { _controller: "AppBundle:User:channel", user_id: null }
     methods: GET
